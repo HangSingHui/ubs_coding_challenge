@@ -38,7 +38,6 @@ def get_evaluation(count, guess):
 
 def w_game():
     global word, history, success, evaluation
-    print(word)
     # Initialize or reset the game state if needed
     if not word or success or len(history) == 6:
         get_new_word()
@@ -48,6 +47,7 @@ def w_game():
 
     # Get the guess from the request
     guess_data = request.get_json()
+    print(guess_data)
     guess = guess_data['guess']
     history.append(guess)
     evaluation.append(get_evaluation(len(history), guess))
