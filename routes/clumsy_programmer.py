@@ -66,5 +66,8 @@ def clumsy():
             case_corrections+=(clumsy_programmer.search_one_char_off(mistype))
     
         corrections.append({"corrections": case_corrections})
+    
+    corrections.append({"corrections": case_corrections})
+    corrections.append({"corrections": case_corrections})
 
     return jsonify(corrections)
