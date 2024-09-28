@@ -23,59 +23,44 @@ def colony():
     if not data or len(data) != 2:
         return jsonify({"error": "Invalid input format"}), 400
 
-    # Extract generations and colonies from input data
-    gen10_c, gen10_i = list(data[0]["colony"]), data[0]["generations"]
-    gen50_c, gen50_i = list(data[1]["colony"]), data[1]["generations"]
+    gen10_c, gen50_c = data[0]["colony"], data[1]["colony"]
+    gen10_i, gen50_i = data[0]["generations"], data[1]["generations"]
 
-    # Process the 10 generations
-    for i in range(gen10_i):
-        new_list = []
-        weight = sum(int(n) for n in gen10_c)
-        
-        for j in range(len(gen10_c)):
-            if j == len(gen10_c) - 1:  # Last number, just add it
-                new_list.append(gen10_c[j])
-                break
+    # Function to evolve the colony and calculate weight
+    def evolve_colony(colony, generations):
+        weight = sum(int(n) for n in colony)
+        for _ in range(generations):
+            new_list = []
+            new_weight = 0
             
-            # Check if the pairs are already in the hashmap
-            if (gen10_c[j], gen10_c[j + 1]) not in hashMap:
-                sig = calculateSignature((gen10_c[j], gen10_c[j + 1]))
-            else:
-                sig = hashMap[(gen10_c[j], gen10_c[j + 1])]
+            for j in range(len(colony)):
+                if j == len(colony) - 1:  # Last number, just add it
+                    new_list.append(colony[j])
+                    break
+                
+                # Check if the pairs are already in the hashmap
+                if (colony[j], colony[j + 1]) not in hashMap:
+                    sig = calculateSignature((colony[j], colony[j + 1]))
+                else:
+                    sig = hashMap[(colony[j], colony[j + 1])]
+                
+                # Calculate new value and append to new_list
+                new_value = str(sig + weight)[-1]
+                new_list.append(colony[j])
+                new_list.append(new_value)
             
-            # Calculate new value and append to new_list
-            new_value = str(sig + weight)[-1]
-            new_list.append(gen10_c[j])
-            new_list.append(new_value)
-        
-        gen10_c = new_list
+            # Update the colony and the weight for the next iteration
+            colony = ''.join(new_list)  # Convert list back to string
+            new_weight = sum(int(n) for n in colony)
+            weight = new_weight  # Update weight for the next generation
 
-    # Calculate weight for the first 10 generations
-    weight10 = sum(int(n) for n in gen10_c)
+        return weight, colony
 
-    # Process the 50 generations
-    for i in range(gen50_i):
-        new_list = []
-        weight = sum(int(n) for n in gen50_c)
+    # Process the 10 generations and calculate weight
+    weight10, _ = evolve_colony(gen10_c, gen10_i)
 
-        for j in range(len(gen50_c)):
-            if j == len(gen50_c) - 1:  # Last number, just add it
-                new_list.append(gen50_c[j])
-                break
-            
-            if (gen50_c[j], gen50_c[j + 1]) not in hashMap:
-                sig = calculateSignature((gen50_c[j], gen50_c[j + 1]))
-            else:
-                sig = hashMap[(gen50_c[j], gen50_c[j + 1])]
-            
-            new_value = str(sig + weight)[-1]
-            new_list.append(gen50_c[j])
-            new_list.append(new_value)
-
-        gen50_c = new_list
-
-    # Calculate weight for the 50 generations
-    weight50 = sum(int(n) for n in gen50_c)
+    # Process the 50 generations and calculate weight
+    weight50, _ = evolve_colony(gen50_c, gen50_i)
 
     # Return the weights as a JSON response
     return jsonify([str(weight10), str(weight50)])
