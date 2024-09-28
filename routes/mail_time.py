@@ -62,7 +62,7 @@ def group_emails(email_data):
 @mailtime_bp.route('/mailtime', methods=['POST'])
 def mailtime():
     data = request.get_json()
-    emails = data['emails']
+    print(data)
     
     # Convert email timestamps to Singapore time
     convert_to_singapore_time(data)
