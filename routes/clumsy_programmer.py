@@ -49,7 +49,7 @@ def clumsy():
     data = request.get_json()
 
     # Limit the processing to only the first 4 cases
-    data = data[0:2]
+    data = data[0:3]
 
     # Create one PrefixTree for all cases
     prefixTree = PrefixTree()

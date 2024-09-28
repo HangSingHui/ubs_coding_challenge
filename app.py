@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 # from routes.dodge_bullet import dodge
 from routes.digital_colony import digital_colony_bp
 from routes.clumsy_programmer import clumsy_programmer_bp
+from routes.efficient_hunter_kazuma import efficient_hunter_bp
 
 # Register the routes
 app.register_blueprint(digital_colony_bp)
