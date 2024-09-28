@@ -49,12 +49,12 @@ def clumsy():
     data = request.get_json()
 
     # Limit the processing to only the first 4 cases
-    data = data[0:4]
+    data = data[:4]
 
     # Create one PrefixTree for all cases
     prefixTree = PrefixTree()
     
-    # Insert all words from all cases into the PrefixTree
+    # Insert all words from the dictionary into the PrefixTree (for all cases)
     for case in data:
         dictionary = case["dictionary"]
         for word in dictionary:
