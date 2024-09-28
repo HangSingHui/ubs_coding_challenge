@@ -73,12 +73,12 @@ def clumsy():
             res.append(None)  # If no correction is found
 
     
-    
-    return jsonify({
-        "corrections": res
-    })
-
-    
+    # Return the corrections in the specified format
+    return jsonify([
+        {
+            "corrections": res
+        }
+    ])
 
 
 
