@@ -55,7 +55,7 @@ class PrefixTree:
 @clumsy_programmer_bp.route('/the-clumsy-programmer', methods=['POST'])
 def clumsy():
     corrections = []
-    data = request.get_json()
+    data = request.get_json()[:-2]
 
     for case in data:
         dictionary, mistypes = case["dictionary"], case["mistypes"]
