@@ -11,11 +11,13 @@ logger = logging.getLogger(__name__)
 from routes.digital_colony import digital_colony_bp
 from routes.clumsy_programmer import clumsy_programmer_bp
 from routes.efficient_hunter_kazuma import efficient_hunter_bp
+from routes.parking_lot import parking_lot_bp
 
 # Register the routes
 app.register_blueprint(digital_colony_bp)
 app.register_blueprint(clumsy_programmer_bp)
 app.register_blueprint(efficient_hunter_bp)
+app.register_blueprint(parking_lot_bp)
 
 @app.route('/', methods=['GET'])
 def default_route():
