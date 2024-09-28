@@ -30,9 +30,11 @@ def group_emails(email_data):
         receiver = email["receiver"]
 
         if subject.startswith("RE:"):
-            original_subject = subject[4:]  # Remove the "RE: " prefix
+            original_subject = subject[4:].strip()  # Remove the "RE: " prefix and strip spaces
 
+            # Check for matching original emails
             for orig_email in email_data["emails"]:
+                # Ensure we match against the original subject and the correct sender and receiver
                 if orig_email["subject"] == original_subject and orig_email["receiver"] == sender and orig_email["sender"] == receiver:
                     # Convert times to Singapore time
                     orig_time_sender = parser.parse(orig_email["timeSent"])
@@ -47,7 +49,7 @@ def group_emails(email_data):
                     response_time = (reply_time_receiver_local - orig_time_sender_local).total_seconds()
                     response_times[sender].append(response_time)
 
-                    break
+                    break  # Exit the loop after finding the match
 
     # Calculate average response times
     average_response_times = {}
@@ -62,7 +64,6 @@ def group_emails(email_data):
 @mailtime_bp.route('/mailtime', methods=['POST'])
 def mailtime():
     data = request.get_json()
-    print(data)
     
     # Convert email timestamps to Singapore time
     convert_to_singapore_time(data)
