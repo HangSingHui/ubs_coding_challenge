@@ -54,31 +54,27 @@ class PrefixTree:
 
 @clumsy_programmer_bp.route('/the-clumsy-programmer', methods=['POST'])
 def clumsy():
+    corrections = []
     data = request.get_json()
-    print(data)
-    dictionary, mistypes = data[0]["dictionary"], data[0]["mistypes"]
 
-    prefixTree = PrefixTree()
-    # Create a prefix trie
-    for word in dictionary:
-        prefixTree.insert(word)
-    
-    res = []
-    # Check for mistypes
-    for word in mistypes:
-        corrected_words = prefixTree.find_one_mistype(word)
-        if corrected_words:
-            res.append(corrected_words[0])  # Assuming we want the first correct candidate
-        else:
-            res.append(None)  # If no correction is found
+    for case in data:
+        dictionary, mistypes = case["dictionary"], case["mistypes"]
 
+        prefixTree = PrefixTree()
+        # Create a prefix trie
+        for word in dictionary:
+            prefixTree.insert(word)
+        
+        case_corrections = []
+        # Check for mistypes
+        for word in mistypes:
+            corrected_words = prefixTree.find_one_mistype(word)
+            if corrected_words:
+                case_corrections.append(corrected_words[0])  # First correct candidate
+            else:
+                case_corrections.append(None)  # If no correction is found
+        
+        corrections.append({"corrections": case_corrections})
     
     # Return the corrections in the specified format
-    return jsonify([
-        {
-            "corrections": res
-        }
-    ])
-
-
-
+    return jsonify(corrections)
