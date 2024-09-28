@@ -7,9 +7,12 @@ logger = logging.getLogger(__name__)
 
 # Import your routes here
 from routes.wordle_game import w_game
+from routes.dodge_bullet import dodge
+
 
 # Register the routes
 app.add_url_rule('/wordle-game', 'w_game', w_game, methods=['POST'])
+app.add_url_rule('/dodge', 'dodge_bullet', dodge, methods=['POST'])
 
 
 @app.route('/', methods=['GET'])
