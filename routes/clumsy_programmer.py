@@ -1,18 +1,10 @@
-from flask import Flask, Blueprint, request, jsonify
-from flask_caching import Cache
+from flask import Blueprint, request, jsonify
 
-# Initialize Flask app
-app = Flask(__name__)
-
-# Initialize Cache
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
-
-# Initialize Blueprint
 clumsy_programmer_bp = Blueprint('clumsy_programmer', __name__)
 
 class PrefixTreeNode:
     def __init__(self):
-        self.children = {}
+        self.children = {}  # Use a dictionary for dynamic children
         self.end = False
 
 class PrefixTree:
@@ -48,19 +40,24 @@ class PrefixTree:
         return differences == 1
 
 @clumsy_programmer_bp.route('/the-clumsy-programmer', methods=['POST'])
-@cache.cached(timeout=60)  # Cache the response for 60 seconds
 def clumsy():
     corrections = []
     data = request.get_json()[:-2]
 
+    # Create one PrefixTree for all cases
+    prefixTree = PrefixTree()
+    
+    # Insert all words from all cases into the PrefixTree
     for case in data:
-        dictionary, mistypes = case["dictionary"], case["mistypes"]
-
-        prefixTree = PrefixTree()
+        dictionary = case["dictionary"]
         for word in dictionary:
             prefixTree.insert(word)
-        
+
+    # Process each case's mistypes
+    for case in data:
+        mistypes = case["mistypes"]
         case_corrections = []
+        
         for word in mistypes:
             corrected_word = prefixTree.find_one_mistype(word)
             case_corrections.append(corrected_word if corrected_word else None)
@@ -68,9 +65,3 @@ def clumsy():
         corrections.append({"corrections": case_corrections})
     
     return jsonify(corrections)
-
-# Register the blueprint
-app.register_blueprint(clumsy_programmer_bp)
-
-if __name__ == '__main__':
-    app.run(debug=True)
