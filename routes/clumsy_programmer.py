@@ -11,7 +11,7 @@ class PrefixTree:
     def __init__(self):
         self.root = PrefixTreeNode()
 
-    def insert(self, word) -> None:
+    def insert(self, word: str) -> None:
         curr = self.root
         for c in word:
             i = ord(c) - ord("a")
@@ -20,39 +20,24 @@ class PrefixTree:
             curr = curr.children[i]
         curr.end = True
 
-    def search(self, word):
-        curr = self.root
-        for c in word:
-            i = ord(c) - ord("a")
-            if curr.children[i] is None:
-                return False
-            curr = curr.children[i]
-        return curr.end
+    def find_one_mistype(self, mistyped_word: str):
+        return self._search_for_candidate(self.root, "", mistyped_word)
 
-    def find_one_mistype(self, word):
-        # Use a helper method to find candidates of the same length
-        return self._find_candidates_of_length(word, self.root, word)
-
-    def _find_candidates_of_length(self, mistyped_word, node, original_word):
-        candidates = []
-        self._search_candidates(node, "", candidates, mistyped_word)
-
-        for candidate in candidates:
-            if self._is_one_mistyped(mistyped_word, candidate):
-                return candidate  # Return immediately upon finding the first match
-        return []
-
-    def _search_candidates(self, node, prefix, candidates, mistyped_word):
-        if node.end:
-            candidates.append(prefix)
+    def _search_for_candidate(self, node: PrefixTreeNode, prefix: str, mistyped_word: str):
+        if node.end and self._is_one_mistyped(mistyped_word, prefix):
+            return prefix  # Return the first matching candidate
+        
         for i in range(26):
             if node.children[i] is not None:
-                self._search_candidates(node.children[i], prefix + chr(i + ord("a")), candidates, mistyped_word)
+                result = self._search_for_candidate(node.children[i], prefix + chr(i + ord("a")), mistyped_word)
+                if result:  # If a candidate was found
+                    return result
+        
+        return None  # Return None if no candidates found
 
-    def _is_one_mistyped(self, mistyped_word, correct_word):
+    def _is_one_mistyped(self, mistyped_word: str, correct_word: str) -> bool:
         if len(mistyped_word) != len(correct_word):
             return False
-        # Count the number of differences
         differences = sum(1 for a, b in zip(mistyped_word, correct_word) if a != b)
         return differences == 1
 
@@ -66,20 +51,14 @@ def clumsy():
         dictionary, mistypes = case["dictionary"], case["mistypes"]
 
         prefixTree = PrefixTree()
-        # Create a prefix trie
         for word in dictionary:
             prefixTree.insert(word)
         
         case_corrections = []
-        # Check for mistypes
         for word in mistypes:
             corrected_word = prefixTree.find_one_mistype(word)
-            if corrected_word:
-                case_corrections.append(corrected_word)  # First correct candidate
-            else:
-                case_corrections.append(None)  # If no correction is found
+            case_corrections.append(corrected_word if corrected_word else None)
         
         corrections.append({"corrections": case_corrections})
     
-    # Return the corrections in the specified format
     return jsonify(corrections)
