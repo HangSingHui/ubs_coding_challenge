@@ -15,6 +15,7 @@ from routes.efficient_hunter_kazuma import efficient_hunter_bp
 # Register the routes
 app.register_blueprint(digital_colony_bp)
 app.register_blueprint(clumsy_programmer_bp)
+app.register_blueprint(efficient_hunter_bp)
 
 @app.route('/', methods=['GET'])
 def default_route():
