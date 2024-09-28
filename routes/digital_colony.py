@@ -27,7 +27,7 @@ def colony():
         # Precompute signatures for all pairs in the initial colony
         signatures = [hashMap.setdefault((colony_list[j], colony_list[j + 1]), calculateSignature(colony_list[j], colony_list[j + 1])) for j in range(length - 1)]
 
-        for _ in range(generations):
+        for _ in range(10):
             new_colony = []
             for j in range(length - 1):
                 new_digit = (signatures[j] + weight) % 10  # Get last digit directly
