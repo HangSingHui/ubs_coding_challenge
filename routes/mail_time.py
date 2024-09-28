@@ -1,48 +1,78 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from dateutil import parser
+import pytz
+from collections import defaultdict
 
 mailtime_bp = Blueprint('mailtime', __name__)
 
-def parse_email_time(time_string):
-    # Parse ISO 8601 time string into datetime object
-    return parser.parse(time_string)
+# Time converter
+def convert_to_singapore_time(email_data):
+    singapore_tz = pytz.timezone("Asia/Singapore")
+    user_timezones = {user["name"]: user["officeHours"]["timeZone"] for user in email_data["users"]}
+
+    for email in email_data["emails"]:
+        sender = email["sender"]
+        sender_timezone = user_timezones[sender]
+        original_time = parser.parse(email["timeSent"]).astimezone(pytz.timezone(sender_timezone))
+        singapore_time = original_time.astimezone(singapore_tz)
+        email["timeSentInSingapore"] = singapore_time.isoformat()
+
+    return email_data
+
+def group_emails(email_data):
+    response_times = defaultdict(list)
+    user_timezones = {user["name"]: user["officeHours"]["timeZone"] for user in email_data["users"]}
+
+    for email in email_data["emails"]:
+        subject = email["subject"]
+        sender = email["sender"]
+        receiver = email["receiver"]
+
+        if subject.startswith("RE:"):
+            original_subject = subject[4:]  # Remove the "RE: " prefix
+
+            for orig_email in email_data["emails"]:
+                if orig_email["subject"] == original_subject and orig_email["receiver"] == sender and orig_email["sender"] == receiver:
+                    # Convert times to Singapore time
+                    orig_time_sender = parser.parse(orig_email["timeSent"])
+                    reply_time_sender = parser.parse(email["timeSent"])
+
+                    # Time in the timezone of the original sender
+                    orig_time_sender_local = orig_time_sender.astimezone(pytz.timezone(user_timezones[receiver]))
+                    # Time in the timezone of the current sender
+                    reply_time_receiver_local = reply_time_sender.astimezone(pytz.timezone(user_timezones[sender]))
+
+                    # Calculate response time in seconds
+                    response_time = (reply_time_receiver_local - orig_time_sender_local).total_seconds()
+                    response_times[sender].append(response_time)
+
+                    break
+
+    # Calculate average response times
+    average_response_times = {}
+    for user, times in response_times.items():
+        if times:  # Avoid division by zero
+            average_response_times[user] = sum(times) // len(times)  # Calculate average
+        else:
+            average_response_times[user] = 0  # No responses
+
+    return {"averageResponseTimes": average_response_times}
 
 @mailtime_bp.route('/mailtime', methods=['POST'])
 def mailtime():
     data = request.get_json()
     emails = data['emails']
-    users = data['users']
     
-    # Create a dictionary to hold total response times and number of responses
-    response_times = {user['name']: {'total_time': 0, 'responses': 0} for user in users}
+    # Convert email timestamps to Singapore time
+    convert_to_singapore_time(data)
     
-    # Sort emails based on their timestamps
-    emails.sort(key=lambda email: parse_email_time(email['timeSent']))
+    # Group emails into threads and calculate averages
+    averages = group_emails(data)
+
+    # Prepare the final response format
+    response = {
+        "response": averages["averageResponseTimes"]
+    }
     
-    # Traverse through the emails and calculate response times
-    for i in range(1, len(emails)):
-        prev_email = emails[i - 1]
-        curr_email = emails[i]
-        
-        # Ensure that the current email is a reply in the same thread
-        if curr_email['subject'].startswith('RE:') and curr_email['subject'][4:] == prev_email['subject']:
-            # Calculate the time difference in seconds between emails
-            prev_time = parse_email_time(prev_email['timeSent'])
-            curr_time = parse_email_time(curr_email['timeSent'])
-            time_diff = (curr_time - prev_time).total_seconds()
-            
-            # Update response times for the sender of the current email
-            sender = curr_email['sender']
-            response_times[sender]['total_time'] += time_diff
-            response_times[sender]['responses'] += 1
-    
-    # Calculate the average response time for each user
-    averages = {}
-    for user, times in response_times.items():
-        if times['responses'] > 0:
-            averages[user] = round(times['total_time'] / times['responses'])
-        else:
-            averages[user] = 0  # No responses
-    
-    return jsonify({"response": averages})
+    return jsonify(response)
