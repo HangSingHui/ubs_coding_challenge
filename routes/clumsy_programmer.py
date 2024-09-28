@@ -71,8 +71,12 @@ def clumsy():
             res.append(corrected_words[0])  # Assuming we want the first correct candidate
         else:
             res.append(None)  # If no correction is found
+
     
-    return jsonify(res)
+    
+    return jsonify({
+        "corrections": res
+    })
 
     
 
