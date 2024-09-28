@@ -1,81 +1,71 @@
 from flask import Blueprint, request, jsonify
-
 clumsy_programmer_bp = Blueprint('clumsy_programmer', __name__)
 
-class PrefixTreeNode:
+class TrieNode:
     def __init__(self):
-        self.children = {}  # Use a dictionary for dynamic children
-        self.end = False
+        self.children = {}
+        self.is_end_of_word = False
+        self.word = None  # Store the actual word for easy retrieval
 
-class PrefixTree:
+
+class Trie:
     def __init__(self):
-        self.root = PrefixTreeNode()
+        self.root = TrieNode()
 
-    def insert(self, word: str) -> None:
-        curr = self.root
-        for c in word:
-            if c not in curr.children:
-                curr.children[c] = PrefixTreeNode()
-            curr = curr.children[c]
-        curr.end = True
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end_of_word = True
+        node.word = word  # Store the word in the node
 
-    def find_one_mistype(self, mistyped_word: str):
-        return self._search_for_candidate(self.root, "", mistyped_word)
 
-    def _search_for_candidate(self, node: PrefixTreeNode, prefix: str, mistyped_word: str):
-        # If we reach a word end and it's a valid correction, return it
-        if node.end and self._is_one_mistyped(mistyped_word, prefix):
-            return prefix
-        
-        # Explore all child nodes (characters) recursively
-        for char, child in node.children.items():
-            result = self._search_for_candidate(child, prefix + char, mistyped_word)
-            if result:  # Return early if a match is found
-                return result
-        
-        return None
+class ClumsyProgrammer:
+    def __init__(self, dictionary):
+        self.trie = Trie()
+        for word in dictionary:
+            self.trie.insert(word)
 
-    def _is_one_mistyped(self, mistyped_word: str, correct_word: str) -> bool:
-        # Ensure both words have the same length
-        if len(mistyped_word) != len(correct_word):
-            return False
-        # Count the number of character differences
-        differences = sum(1 for a, b in zip(mistyped_word, correct_word) if a != b)
-        return differences == 1
+    def search_one_char_off(self, mistyped_word):
+        corrections = []
+        self._search_helper(self.trie.root, mistyped_word, 0, False, corrections)
+        return corrections
+
+    def _search_helper(self, node, word, index, changed, corrections):
+        if index == len(word):
+            if node.is_end_of_word and changed:  # Valid correction found
+                corrections.append(node.word)
+            return
+
+        char = word[index]
+
+        # Traverse through the current node's children
+        for child_char, child_node in node.children.items():
+            # Case 1: Keep the same character
+            if child_char == char:
+                self._search_helper(child_node, word, index + 1, changed, corrections)
+            # Case 2: Change the character (if we haven't changed before)
+            elif not changed:
+                self._search_helper(child_node, word, index + 1, True, corrections)  # Mark as changed
 
 @clumsy_programmer_bp.route('/the-clumsy-programmer', methods=['POST'])
 def clumsy():
-    corrections = []
     data = request.get_json()
-
-    # Limit the processing to only the first 4 cases
-    data = data[0:3]
-
-    # Create one PrefixTree for all cases
-    prefixTree = PrefixTree()
+    corrections = []
     
-    # Insert all words from all cases into the PrefixTree
-    for case in data:
-        dictionary = case["dictionary"]
-        for word in dictionary:
-            prefixTree.insert(word)
+    
+    # Limit the processing to only the first 4 cases
+    data = data[0:4]
 
-    # Process each case's mistypes
     for case in data:
         mistypes = case["mistypes"]
+        clumsy_programmer = ClumsyProgrammer(case["dictionary"])
         case_corrections = []
-        
-        for word in mistypes:
-            corrected_word = prefixTree.find_one_mistype(word)
-            case_corrections.append(corrected_word if corrected_word else None)
-        
-        corrections.append({"corrections": case_corrections})
+        for mistype in mistypes:
+            case_corrections+=(clumsy_programmer.search_one_char_off(mistype))
     
     corrections.append({"corrections": case_corrections})
-    corrections.append({"corrections": case_corrections})
-    corrections.append({"corrections": case_corrections})
-    corrections.append({"corrections": case_corrections})
-    
-    
-    # Return the corrections for the first 4 cases
+
     return jsonify(corrections)
