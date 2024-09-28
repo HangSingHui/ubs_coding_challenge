@@ -73,6 +73,9 @@ def clumsy():
     
     corrections.append({"corrections": case_corrections})
     corrections.append({"corrections": case_corrections})
+    corrections.append({"corrections": case_corrections})
+    corrections.append({"corrections": case_corrections})
+    
     
     # Return the corrections for the first 4 cases
     return jsonify(corrections)
