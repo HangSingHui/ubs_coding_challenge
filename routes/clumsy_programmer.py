@@ -23,26 +23,33 @@ class PrefixTree:
         return self._search_for_candidate(self.root, "", mistyped_word)
 
     def _search_for_candidate(self, node: PrefixTreeNode, prefix: str, mistyped_word: str):
+        # If we reach a word end and it's a valid correction, return it
         if node.end and self._is_one_mistyped(mistyped_word, prefix):
             return prefix
         
+        # Explore all child nodes (characters) recursively
         for char, child in node.children.items():
             result = self._search_for_candidate(child, prefix + char, mistyped_word)
-            if result:
+            if result:  # Return early if a match is found
                 return result
         
         return None
 
     def _is_one_mistyped(self, mistyped_word: str, correct_word: str) -> bool:
+        # Ensure both words have the same length
         if len(mistyped_word) != len(correct_word):
             return False
+        # Count the number of character differences
         differences = sum(1 for a, b in zip(mistyped_word, correct_word) if a != b)
         return differences == 1
 
 @clumsy_programmer_bp.route('/the-clumsy-programmer', methods=['POST'])
 def clumsy():
     corrections = []
-    data = request.get_json()[:-2]
+    data = request.get_json()
+
+    # Limit the processing to only the first 4 cases
+    data = data[0:4]
 
     # Create one PrefixTree for all cases
     prefixTree = PrefixTree()
@@ -64,4 +71,5 @@ def clumsy():
         
         corrections.append({"corrections": case_corrections})
     
+    # Return the corrections for the first 4 cases
     return jsonify(corrections)
