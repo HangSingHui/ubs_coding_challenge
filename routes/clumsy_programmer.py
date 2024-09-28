@@ -30,19 +30,24 @@ class PrefixTree:
         return curr.end
 
     def find_one_mistype(self, word):
-        candidates = []
-        for candidate in self._get_all_words(self.root, "", []):
-            if self._is_one_mistyped(word, candidate):
-                candidates.append(candidate)
-        return candidates
+        # Use a helper method to find candidates of the same length
+        return self._find_candidates_of_length(word, self.root, word)
 
-    def _get_all_words(self, node, prefix, results):
+    def _find_candidates_of_length(self, mistyped_word, node, original_word):
+        candidates = []
+        self._search_candidates(node, "", candidates, mistyped_word)
+
+        for candidate in candidates:
+            if self._is_one_mistyped(mistyped_word, candidate):
+                return candidate  # Return immediately upon finding the first match
+        return []
+
+    def _search_candidates(self, node, prefix, candidates, mistyped_word):
         if node.end:
-            results.append(prefix)
+            candidates.append(prefix)
         for i in range(26):
             if node.children[i] is not None:
-                self._get_all_words(node.children[i], prefix + chr(i + ord("a")), results)
-        return results
+                self._search_candidates(node.children[i], prefix + chr(i + ord("a")), candidates, mistyped_word)
 
     def _is_one_mistyped(self, mistyped_word, correct_word):
         if len(mistyped_word) != len(correct_word):
@@ -68,9 +73,9 @@ def clumsy():
         case_corrections = []
         # Check for mistypes
         for word in mistypes:
-            corrected_words = prefixTree.find_one_mistype(word)
-            if corrected_words:
-                case_corrections.append(corrected_words[0])  # First correct candidate
+            corrected_word = prefixTree.find_one_mistype(word)
+            if corrected_word:
+                case_corrections.append(corrected_word)  # First correct candidate
             else:
                 case_corrections.append(None)  # If no correction is found
         
