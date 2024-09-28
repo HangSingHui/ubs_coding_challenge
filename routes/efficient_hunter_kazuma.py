@@ -2,47 +2,53 @@ from flask import Blueprint, request, jsonify
 from typing import List
 
 efficient_hunter_bp = Blueprint('efficient_hunter_kazuma', __name__)
-class Solution:
-    def calculate_efficiency(self, monsters: List[int]) -> int:
-        n = len(monsters)
-        if n == 0:
+def calculate_efficiency(monster_list):
+    
+    n = len(monster_list)
+    
+    # Memoization table to store the maximum efficiency from time `i` onwards
+    memo = [-1] * n
+
+    # Helper function to calculate max efficiency from time `i`
+    def dp(i):
+        # Base case: if we're beyond the last time frame, return 0
+        if i >= n:
             return 0
         
-        # Initialize dp array
-        # dp[i] represents the maximum efficiency achievable up to index i
-        dp = [0] * (n + 2)  # +2 to handle the cooldown period
-        
-        # Initialize variables to keep track of the best efficiency after attacking and not attacking
-        best_after_attack = 0
-        best_without_attack = 0
-        
-        for i in range(n):
-            # Current best efficiency without attacking
-            current_without_attack = max(best_after_attack, best_without_attack)
-            
-            # Calculate efficiency if we attack at this position
-            attack_gain = sum(monsters[i:min(i+3, n)]) - 1  # Sum of next 3 positions (or less) minus preparation cost
-            current_with_attack = attack_gain + (dp[i-1] if i > 0 else 0)
-            
-            # Update dp
-            dp[i] = max(current_without_attack, current_with_attack)
-            
-            # Update best efficiencies
-            best_without_attack = current_without_attack
-            best_after_attack = current_with_attack
-        
-        return max(dp)
+        # Return memoized result if it exists
+        if memo[i] != -1:
+            return memo[i]
 
+        # Case 1: Skip this time frame and move to rear (just carry forward the previous efficiency)
+        max_efficiency = dp(i + 1)
+
+        # Case 2: Try preparing a circle at time `i` and attack at some `j > i`
+        cost = monster_list[i]  # The cost of preparing a circle at `i`
+        for j in range(i + 1, n):
+            gain = monster_list[j]  # The gold gained by attacking at `j`
+            # Efficiency is gain - cost, plus the best future efficiency from `j + 2` (because Kazuma must retreat)
+            efficiency = (gain - cost) + dp(j + 2)
+            # Update the maximum efficiency
+            max_efficiency = max(max_efficiency, efficiency)
+
+        # Memoize the result for time `i`
+        memo[i] = max_efficiency
+        return max_efficiency
+
+    # Start the recursion from time `0`
+    return dp(0)
 
 @efficient_hunter_bp.route('/efficient-hunter-kazuma', methods=['POST'])
-def efficient_hunter_kazuma():
-    data = request.get_json()
-    solution = Solution()
+def calculate_efficiency_api():
+    monster_list = request.get_json()
     result = []
-    
-    for case in data:
-        monsters =list(case['monsters'])
-        efficiency = solution.calculate_efficiency(monsters)
+
+    for m in list(monster_list):
+        efficiency = calculate_efficiency(m["monsters"])
         result.append({"efficiency": efficiency})
     
     return jsonify(result)
+
+
+
+
