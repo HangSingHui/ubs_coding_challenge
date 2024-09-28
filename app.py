@@ -6,14 +6,13 @@ from routes import app
 logger = logging.getLogger(__name__)
 
 # Import your routes here
-from routes.wordle_game import w_game
-from routes.dodge_bullet import dodge
+# from routes.wordle_game import w_game
+# from routes.dodge_bullet import dodge
+from routes.digital_colony import digital_colony_bp
 
 
 # Register the routes
-app.add_url_rule('/wordle-game', 'w_game', w_game, methods=['POST'])
-app.add_url_rule('/dodge', 'dodge_bullet', dodge, methods=['POST'])
-
+app.register_blueprint(digital_colony_bp)
 
 @app.route('/', methods=['GET'])
 def default_route():
