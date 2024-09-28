@@ -9,7 +9,7 @@ with open("data/wordle-list.txt", "r") as file:
     allText = file.read() 
     words = list(map(str, allText.split())) 
 
-# Global game state variables
+# # Global game state variables
 history = []
 evaluation = []
 success = False
@@ -26,7 +26,7 @@ def get_evaluation(count, guess):
     
     res = ""
     for i in range(len(guess)):
-        if i + 1 == count:
+        if i + 1 == count and i != len(guess):
             res += "?"
         elif guess[i] == word[i]:
             res += "O"
