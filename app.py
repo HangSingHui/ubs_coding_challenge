@@ -9,10 +9,12 @@ logger = logging.getLogger(__name__)
 # from routes.wordle_game import w_game
 # from routes.dodge_bullet import dodge
 from routes.digital_colony import digital_colony_bp
+from routes.clumsy_programmer import clumsy_programmer_bp
 
 
 # Register the routes
 app.register_blueprint(digital_colony_bp)
+app.register_blueprint(clumsy_programmer_bp)
 
 @app.route('/', methods=['GET'])
 def default_route():
