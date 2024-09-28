@@ -54,8 +54,7 @@ class ClumsyProgrammer:
 def clumsy():
     data = request.get_json()
     corrections = []
-    
-    
+
     # Limit the processing to only the first 4 cases
     data = data[0:4]
 
@@ -66,6 +65,6 @@ def clumsy():
         for mistype in mistypes:
             case_corrections+=(clumsy_programmer.search_one_char_off(mistype))
     
-    corrections.append({"corrections": case_corrections})
+        corrections.append({"corrections": case_corrections})
 
     return jsonify(corrections)
